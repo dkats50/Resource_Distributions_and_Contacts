@@ -1,6 +1,8 @@
 #Skylar Hopkins and Rowan Bermnan 2020
 #This script analyzes the contact rate data from the 2016 resource distribution exp
 
+#HELLO
+
 #####################################################################################
 ########################Load packages and data#######################################
 #####################################################################################

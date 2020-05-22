@@ -1,7 +1,5 @@
-#Skylar Hopkins and Rowan Bermnan 2020
+#Skylar Hopkins 2020
 #This script analyzes the contact rate data from the 2016 resource distribution exp
-
-#HELLO
 
 #####################################################################################
 ########################Load packages and data#######################################
@@ -9,7 +7,7 @@
 library(ggplot2)
 library(tidyverse)
 
-#This has the observations for each contact - rows are "dyads" or contacts
+#This has the observations for each contact - rows are "dyads" or contacts between two snails
 Dyads<-read.csv(paste(getwd(), "/ResourceDistributionExperiment_ContactData.csv", sep=""))
 View(Dyads)
 

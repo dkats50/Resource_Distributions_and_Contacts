@@ -1,0 +1,62 @@
+---
+title: "Snail Analysis"
+author: "Dimitri Kasiouleris"
+date: "5/22/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+
+library(tidyverse)
+
+
+```
+
+
+```{r}
+#Getting Contacts per snail per tank
+Dyads<-read.csv(paste(getwd(), "/ResourceDistributionExperiment_ContactData.csv", sep=""))
+#just needed to see tank,trial, density, and snails
+dyads2 <- Dyads[,c(2,3,4,8,9)] 
+dyads_letters <- unique(dyads2$Snail1) 
+#needed to know what letter combos exist
+summary(dyads_letters)
+#Make columns for each snail color
+dyads2$RY <- rowSums(dyads2 == "RY")
+dyads2$Y <- rowSums(dyads2 == "Y")
+dyads2$B <- rowSums(dyads2 == "B")
+dyads2$C <- rowSums(dyads2 == "C")
+dyads2$G <- rowSums(dyads2 == "G")
+dyads2$GB <- rowSums(dyads2 == "GB")
+dyads2$GP <- rowSums(dyads2 == "GP")
+dyads2$P <- rowSums(dyads2 == "P")
+dyads2$PB <- rowSums(dyads2 == "PB")
+dyads2$R <- rowSums(dyads2 == "R")
+dyads2$RB <- rowSums(dyads2 == "RB")
+dyads2$RG <- rowSums(dyads2 == "RG")
+dyads2$YB <- rowSums(dyads2 == "YB")
+dyads2$YG <- rowSums(dyads2 == "YG")
+dyads2$YP <- rowSums(dyads2 == "YP")
+dyads2$RP <- rowSums(dyads2 == "RP")
+#Conver wide data into long data grouping by density, tank, and trial
+dyads_long <- dyads2 %>% group_by(Tank,Trial) %>% summarise_at(vars(c(Y,B,C,G,GB,GP,P,PB,R,RB,RG,YB,YG,YP, RY, RP)), funs(sum)) %>% pivot_longer(cols = c(Y,B,C,G,GB,GP,P,PB,R,RB,RG,YB,YG,YP, RY, RP), names_to = "ColorID", values_to = "Count") 
+#Removing rows with 0 from the new dataframe
+dyads_long <- dyads_long[dyads_long$Count != 0,]
+
+```
+
+```{r}
+#Merging long data and individual snail data
+snail_data <- read.csv("ResourceDistributionExp_IndividualSnailData.csv")
+snail_data2 <- merge(snail_data, dyads_long, by = c("Trial", "Tank", "ColorID"), all = TRUE)
+#Rows with NA removed
+snail_data2 <- na.omit(snail_data2)
+
+
+```
+
+

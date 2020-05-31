@@ -11,8 +11,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 
+library(ggplot2)
 library(tidyverse)
-
 
 ```
 
@@ -43,7 +43,7 @@ dyads2$YG <- rowSums(dyads2 == "YG")
 dyads2$YP <- rowSums(dyads2 == "YP")
 dyads2$RP <- rowSums(dyads2 == "RP")
 #Conver wide data into long data grouping by density, tank, and trial
-dyads_long <- dyads2 %>% group_by(Tank,Trial) %>% summarise_at(vars(c(Y,B,C,G,GB,GP,P,PB,R,RB,RG,YB,YG,YP, RY, RP)), funs(sum)) %>% pivot_longer(cols = c(Y,B,C,G,GB,GP,P,PB,R,RB,RG,YB,YG,YP, RY, RP), names_to = "ColorID", values_to = "Count") 
+dyads_long <- dyads2 %>% group_by(Tank,Trial) %>% summarise_at(vars(c(Y,B,C,G,GB,GP,P,PB,R,RB,RG,YB,YG,YP, RY, RP)), sum) %>% pivot_longer(cols = c(Y,B,C,G,GB,GP,P,PB,R,RB,RG,YB,YG,YP, RY, RP), names_to = "ColorID", values_to = "Count") 
 #Removing rows with 0 from the new dataframe
 dyads_long <- dyads_long[dyads_long$Count != 0,]
 
@@ -53,6 +53,34 @@ dyads_long <- dyads_long[dyads_long$Count != 0,]
 #Merging long data and individual snail data
 snail_data <- read.csv("ResourceDistributionExp_IndividualSnailData.csv")
 snail_data2 <- merge(snail_data, dyads_long, by = c("Trial", "Tank", "ColorID"), all = TRUE)
-#Rows with NA removed
-snail_data2 <- na.omit(snail_data2)
+snail_data2[is.na(snail_data2)] <- 0 
+#Rows with 0 removed
+snail_data3 <- snail_data2[snail_data2$Count != 0,]
 ```
+
+```{r}
+#Average contacts and standard deviations
+mean_contact <- snail_data2 %>% group_by(Trial,Tank,SnailDensity, AggregationIndex) %>% summarise(mean = mean(Count), st.dev = sd(Count))
+#Graphing density vs contacts
+##Colorblind palette
+cb <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+#Plot density vs mean contact rate with aggregation index treatmenst as groups
+contacts_plot <- ggplot(mean_contact, aes(SnailDensity, mean))+
+  geom_point(aes(color = factor(AggregationIndex)), position = position_dodge() )+
+  xlab("Snail Density")+
+  ylab("Per Capita Contact Rate")+
+  theme_classic()+
+  scale_x_continuous(breaks = c(0,2,4,6,8,10,12,14,16), limits = c(0,16))+
+  scale_color_manual(values = cb, name = "Aggregation Index")+
+  facet_wrap(~AggregationIndex)+
+  theme(strip.text = element_blank())+
+  geom_errorbar(aes(ymin = mean-2*st.dev, ymax = mean+2*st.dev), width = 0.1, position = position_dodge(0.9))
+
+print(contacts_plot)
+
+
+
+
+```
+
+

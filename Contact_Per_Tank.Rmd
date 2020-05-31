@@ -55,8 +55,4 @@ snail_data <- read.csv("ResourceDistributionExp_IndividualSnailData.csv")
 snail_data2 <- merge(snail_data, dyads_long, by = c("Trial", "Tank", "ColorID"), all = TRUE)
 #Rows with NA removed
 snail_data2 <- na.omit(snail_data2)
-
-
 ```
-
-

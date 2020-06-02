@@ -59,4 +59,68 @@ hist(Snails$Length)
 #####################################################################################
 ############Convert observed contacts into contacts per snail########################
 #####################################################################################
+#needed to know what letter combos exist
+dyads_letters <- unique(Dyads$Snail1) 
+summary(dyads_letters)
 
+#Make columns for each snail color
+Dyads$RY <- rowSums(Dyads == "RY")
+Dyads$Y <- rowSums(Dyads == "Y")
+Dyads$B <- rowSums(Dyads == "B")
+Dyads$C <- rowSums(Dyads == "C")
+Dyads$G <- rowSums(Dyads == "G")
+Dyads$GB <- rowSums(Dyads == "GB")
+Dyads$GP <- rowSums(Dyads == "GP")
+Dyads$P <- rowSums(Dyads == "P")
+Dyads$PB <- rowSums(Dyads == "PB")
+Dyads$R <- rowSums(Dyads == "R")
+Dyads$RB <- rowSums(Dyads == "RB")
+Dyads$RG <- rowSums(Dyads == "RG")
+Dyads$YB <- rowSums(Dyads == "YB")
+Dyads$YG <- rowSums(Dyads == "YG")
+Dyads$YP <- rowSums(Dyads == "YP")
+Dyads$RP <- rowSums(Dyads == "RP")
+#Conver wide data into long data grouping by density, tank, and trial
+dyads_long <- Dyads %>% group_by(Tank,Trial) %>% summarise_at(vars(c(Y,B,C,G,GB,GP,P,PB,R,RB,RG,YB,YG,YP, RY, RP)), sum) %>% pivot_longer(cols = c(Y,B,C,G,GB,GP,P,PB,R,RB,RG,YB,YG,YP, RY, RP), names_to = "ColorID", values_to = "Count") 
+#Removing rows with 0 from the new dataframe
+dyads_long <- dyads_long[dyads_long$Count != 0,]
+
+#Merging long data and individual snail data
+Snails <- merge(Snails, dyads_long, by = c("Trial", "Tank", "ColorID"), all = TRUE)
+Snails$Count[is.na(Snails$Count)] <- 0 
+
+############################################################################
+##################Plot mean contacts per tank###############################
+############################################################################
+#Calculate means and 95% CIs based on a Poisson distribution: http://stats.stackexchange.com/questions/15371/how-to-calculate-a-confidence-level-for-a-poisson-distribution
+width<-function (z=1.96, lambda, N) {
+  W<-z*sqrt(lambda/N)
+  return(W)
+}
+
+Means <- Snails %>% 
+  group_by(Trial,Tank,SnailDensity, AggregationIndex) %>% 
+  summarise(mean = mean(Count), numsnails = n()) %>%
+  mutate(highCI = (mean + width(lambda=mean, N=numsnails)), lowCI = (mean - width(lambda=mean, N=numsnails)))
+Means$lowCI[Means$lowCI<0]<-0
+
+##Colorblind palette
+cb <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+#Plot density vs mean contact rate with aggregation index treatmenst as groups
+contacts_plot <- ggplot(Means, aes(SnailDensity, mean))+
+  geom_point(aes(color = factor(AggregationIndex)))+
+  xlab("Snail Density")+
+  ylab("Per Capita Contact Rate")+
+  theme_classic()+
+  scale_x_continuous(limits = c(0,16))+
+  scale_color_manual(values = cb, name = "Aggregation Index")+
+  facet_wrap(~AggregationIndex, nrow = 4)+
+  geom_errorbar(aes(ymin = highCI, ymax = lowCI), width = 0.1) +
+  theme(legend.position = "none")
+contacts_plot
+
+ggplot(data=Means, aes(y=mean, x=AggregationIndex, color=SnailDensity)) +
+  geom_jitter()
+
+ggplot(data=Means, aes(y=mean, color=AggregationIndex, x=SnailDensity)) +
+  geom_jitter()

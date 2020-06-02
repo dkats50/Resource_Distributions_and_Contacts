@@ -53,9 +53,10 @@ dyads_long <- dyads_long[dyads_long$Count != 0,]
 #Merging long data and individual snail data
 snail_data <- read.csv("ResourceDistributionExp_IndividualSnailData.csv")
 snail_data2 <- merge(snail_data, dyads_long, by = c("Trial", "Tank", "ColorID"), all = TRUE)
-snail_data2[is.na(snail_data2)] <- 0 
-#Rows with 0 removed
-snail_data3 <- snail_data2[snail_data2$Count != 0,]
+#If count is NA, it was a zero
+snail_data2$Count[is.na(snail_data2$Count)] <- 0 
+#Rows with 0 removed - we don't want to remove the zeros. They're important data
+#snail_data3 <- snail_data2[snail_data2$Count != 0,]
 ```
 
 ```{r}
